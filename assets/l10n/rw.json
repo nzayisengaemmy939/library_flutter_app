@@ -1,0 +1,39 @@
+{
+    "title": "Isomero rya Kaminuza y' u Rwanda",
+    "subtitle": "Iyi gahunda ifasha abanyeshuri kwinjira mu isomero",
+    "entranceButton": "Injira",
+    "registerButton": "Iyandikishe",
+    "enterRegNumber": "Andika numero yawe y'umunyeshuri kugirango winjire",
+    "regNumber": "Numero y'umunyeshuri",
+    "send": "Ohereza",
+    "sending": "Tegereza...",
+    "qrcode": "Kode ya QR yakorewe",
+    "reProfilePicture": "Ifoto yawe y'umwirondoro yamaze kuvugururwa",
+    "notRegistered": "Niba utiyandikishije?",
+    "register": "Iyandikishe",
+    "darkMode": "Ibara ry'umukara",
+    "language": "Ikinyarwanda",
+    "error": {
+      "required": "Numero y'umunyeshuri irakenewe",
+      "invalid": "Numero y'umunyeshuri ntiyemewe"
+    },
+    "registerTitle": "Iyandikishe hano utangire",
+    "selectLanguage": "Hitamo uririmi",
+    "close": "Funga",
+    "firstName": "Izina ry'mbere",
+    "otherName": "Andi mazina",
+    "department": "Ishami",
+    "school": "Ishuri",
+    "gender": {
+      "label": "Hitamo igitsina",
+      "options": {
+        "male": "Gabo",
+        "female": "Gore",
+        "other": "Ikindi"
+      }
+    },
+    "level": "Urwego",
+    "profilePicture": "Fata ifoto yawe",
+    "submit": "Iyandikishe"
+  }
+  
