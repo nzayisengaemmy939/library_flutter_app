@@ -1,9 +1,10 @@
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:university_library/components/appcolors.dart';
 import '../components/appbar.dart';
 import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({Key? key}) : super(key: key);
@@ -17,8 +18,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
   String? selectedGender;
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
-  
-  // Form controllers
+  bool isLoading = false;
+
   final _regNumberController = TextEditingController();
   final _firstNameController = TextEditingController();
   final _otherNameController = TextEditingController();
@@ -33,7 +34,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
         imageQuality: 80,
         preferredCameraDevice: CameraDevice.front,
       );
-      
+
       if (photo != null) {
         setState(() {
           _imageFile = File(photo.path);
@@ -48,35 +49,62 @@ class _RegistrationPageState extends State<RegistrationPage> {
     }
   }
 
-  void _handleRegistration() {
-    if (_formKey.currentState!.validate()) {
-      if (_imageFile == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please take a profile picture')),
-        );
-        return;
-      }
-      
-     
-      final registrationData = {
-        'regNumber': _regNumberController.text,
-        'firstName': _firstNameController.text,
-        'otherName': _otherNameController.text,
-        'department': _departmentController.text,
-        'school': _schoolController.text,
-        'gender': selectedGender,
-        'level': _levelController.text,
-        'profileImage': _imageFile!.path,
-      };
-      
+  Future<void> _handleRegistration() async {
+  if (!_formKey.currentState!.validate()) {
+    return;
+  }
 
-      print('Registration Data: $registrationData');
-      
+  setState(() {
+    isLoading = true;
+  });
+
+  try {
+    final Uri apiUrl = Uri.parse(
+        "https://nsalibrentrebk.onrender.com/users/student/register");
+
+    final request = http.MultipartRequest('POST', apiUrl);
+    request.fields['regNo'] = _regNumberController.text;
+    request.fields['firstName'] = _firstNameController.text;
+    request.fields['otherName'] = _otherNameController.text;
+    request.fields['department'] = _departmentController.text;
+    request.fields['school'] = _schoolController.text;
+    request.fields['level'] = _levelController.text;
+    request.fields['gender'] = selectedGender ?? '';
+
+    if (_imageFile != null) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'photo', 
+        _imageFile!.path,
+      ));
+    }
+
+    final response = await request.send();
+
+    if (response.statusCode == 201) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Registration successful!')),
       );
+    } else {
+      // Extract error message from the response body
+      final responseBody = await response.stream.bytesToString();
+      final responseData = jsonDecode(responseBody);
+
+      String errorMessage = responseData['message'] ?? 'Registration failed';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: $e')),
+    );
+  } finally {
+    setState(() {
+      isLoading = false;
+    });
   }
+}
+
 
   @override
   void dispose() {
@@ -99,12 +127,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
           child: Padding(
             padding: const EdgeInsets.all(10),
             child: Container(
-           
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                   color: Colors.white,
-                borderRadius: BorderRadius.circular(10)
-              ),
+                  color: Colors.white, borderRadius: BorderRadius.circular(10)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -199,12 +224,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
         decoration: InputDecoration(
           hintText: label,
           hintStyle: const TextStyle(color: Colors.grey),
-         
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey.shade300),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
     );
@@ -220,7 +245,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
             borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide(color: Colors.grey.shade300),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
         value: selectedGender,
         validator: (value) {
@@ -229,7 +255,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           }
           return null;
         },
-        items: ['Male', 'Female', 'Other']
+        items: ['male', 'female', 'Other']
             .map((String value) => DropdownMenuItem<String>(
                   value: value,
                   child: Text(value),
@@ -302,17 +328,18 @@ class _RegistrationPageState extends State<RegistrationPage> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _handleRegistration,
+        onPressed: isLoading ? null : _handleRegistration,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           padding: const EdgeInsets.symmetric(vertical: 15),
-          // shape: RoundedRectangleBorder(
-          //   borderRadius: BorderRadius.circular(8),
-          // ),
         ),
-        child: const Text('Register',style: TextStyle(color: Colors.white),),
+        child: isLoading
+            ? const CircularProgressIndicator(color: Colors.white)
+            : const Text(
+                'Register',
+                style: TextStyle(color: Colors.white),
+              ),
       ),
     );
   }
 }
-
